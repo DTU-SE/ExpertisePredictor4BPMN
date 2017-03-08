@@ -1,9 +1,10 @@
 package moderare.expertise.model;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import moderare.expertise.exceptions.PredictorException;
 import moderare.expertise.exceptions.UnknownAttribute;
@@ -14,8 +15,9 @@ import weka.core.Instance;
 
 public class ModelSample {
 
-	public static final String[] classes = new String[] { "expert", "novice" };
 	public static final Map<String, DATA_TYPE> attributeTypes = new HashMap<String, DATA_TYPE>();
+	public static final Map<String, Attribute> attributes = new HashMap<String, Attribute>();
+	public static Attribute classAttribute;
 	
 	static {
 		// this is the list of attributes used with the corresponding type
@@ -31,19 +33,41 @@ public class ModelSample {
 		attributeTypes.put("no_explicit_gw", DATA_TYPE.NUMERIC);
 		attributeTypes.put("no_implicit_gw", DATA_TYPE.NUMERIC);
 		attributeTypes.put("no_reused_gw", DATA_TYPE.NUMERIC);
+		
+		// construct the list of weka attributes
+		for (String attribute : attributeTypes.keySet()) {
+			if (attributeTypes.get(attribute) != DATA_TYPE.SAMPLE_ID) {
+				if (attributeTypes.get(attribute) == DATA_TYPE.CLASS) {
+					classAttribute = new Attribute(attribute, EXPERTISE.names());
+					attributes.put(attribute, classAttribute);
+				} else {
+					attributes.put(attribute, new Attribute(attribute));
+				}
+			}
+		}
 	}
 	
-	private Map<String, Object> attributes = new HashMap<String, Object>();
-
+	private Map<String, Object> attributeValues = new HashMap<String, Object>();
+	
+	public ModelSample() {
+		
+	}
+	
+	public ModelSample(Map<String, Object> values) throws PredictorException {
+		for(String attribute : values.keySet()) {
+			setTypedValue(attribute, values.get(attribute));
+		}
+	}
+	
 	public Instance getWekaInstance() {
 		Instance wekaInstance = new DenseInstance(attributeTypes.size() - 1); // we do not wat to consider the SAMPLE_ID attribute
 		for (String attribute : attributeTypes.keySet()) {
 			try {
 				if (attributeTypes.get(attribute) == DATA_TYPE.CLASS) {
-					wekaInstance.setValue(new Attribute(attribute, Arrays.asList(classes)), getString(attribute));
+					wekaInstance.setValue(attributes.get(attribute), getString(attribute));
 				}
 				if (attributeTypes.get(attribute) == DATA_TYPE.NUMERIC) {
-					wekaInstance.setValue(new Attribute(attribute), getNumeric(attribute));
+					wekaInstance.setValue(attributes.get(attribute), getNumeric(attribute));
 				}
 			} catch (WrongValueType e) {
 				e.printStackTrace();
@@ -74,19 +98,19 @@ public class ModelSample {
 			throw new UnknownAttribute();
 		}
 		if (EnumSet.of(DATA_TYPE.SAMPLE_ID, DATA_TYPE.CLASS).contains(expectedType) && value instanceof String) {
-			attributes.put(attributeName, (String) value);
+			attributeValues.put(attributeName, (String) value);
 		} else if (expectedType == DATA_TYPE.NUMERIC && value instanceof Double) {
-			attributes.put(attributeName, (Double) value);
+			attributeValues.put(attributeName, (Double) value);
 		} else {
-			throw new WrongValueType();
+			throw new WrongValueType(attributeName, attributeTypes.get(attributeName), value);
 		}
 	}
 	
 	private Object getTypedAttribute(String attributeName, DATA_TYPE expectedType, DATA_TYPE ... otherExpectedType) throws WrongValueType {
 		if (EnumSet.of(expectedType, otherExpectedType).contains(attributeTypes.get(attributeName))) {
-			return attributes.get(attributeName);
+			return attributeValues.get(attributeName);
 		}
-		throw new WrongValueType();
+		throw new WrongValueType(attributeName, expectedType);
 	}
 	
 	@Override
@@ -99,5 +123,10 @@ public class ModelSample {
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return attributeValues.hashCode();
 	}
 }

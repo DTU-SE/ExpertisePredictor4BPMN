@@ -1,4 +1,4 @@
-package moderare.expertise.utils.expertise;
+package moderare.expertise.utils;
 
 
 /**

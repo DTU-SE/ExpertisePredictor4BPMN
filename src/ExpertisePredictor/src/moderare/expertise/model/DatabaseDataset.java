@@ -20,13 +20,14 @@ public class DatabaseDataset extends Dataset {
 	
 	public void addFromDatabase(boolean attributesNotNull, String specificTask, EXPERTISE specificExpertise, double minRelativeModelingTime, int numberOfCases, String orderBy) {
 		try {
-			load(constructQuery(attributesNotNull, specificTask, specificExpertise, minRelativeModelingTime, numberOfCases, orderBy));
+			load(constructQuery(attributesNotNull, specificTask, specificExpertise, minRelativeModelingTime, null, numberOfCases, orderBy));
 		} catch (SQLException | PredictorException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private String constructQuery(boolean attributesNotNull, String specificTask, EXPERTISE specificExpertise, double minRelativeModelingTime, int numberOfCases, String orderBy) {
+	protected String constructQuery(boolean attributesNotNull, String specificTask, EXPERTISE specificExpertise,
+			double minRelativeModelingTime, String additionaWhereConditions, int numberOfCases, String orderBy) {
 		String query = "SELECT ";
 		query += StringUtils.join(ModelSample.attributeTypes.keySet(), ", ");
 		query += " FROM metrics_evolution WHERE 1=1";
@@ -43,6 +44,10 @@ public class DatabaseDataset extends Dataset {
 			query += " AND (relative_modeling_time >= "+ minRelativeModelingTime +")";
 		}
 		
+		if (additionaWhereConditions != null) {
+			query += " AND (" + additionaWhereConditions + ")";
+		}
+		
 		if (orderBy != null) {
 			query += " ORDER BY " + orderBy;
 		}
@@ -52,7 +57,7 @@ public class DatabaseDataset extends Dataset {
 		return query;
 	}
 	
-	private void load(String query) throws SQLException, PredictorException {
+	protected void load(String query) throws SQLException, PredictorException {
 		ResultSet resultSet = connection.createStatement().executeQuery(query);
 		while (resultSet.next()) {
 			add(new ModelSample(DatabaseUtils.map(resultSet)));

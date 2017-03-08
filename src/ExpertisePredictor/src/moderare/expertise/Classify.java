@@ -28,7 +28,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import moderare.expertise.utils.expertise.Pair;
+import moderare.expertise.utils.Pair;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.functions.MultilayerPerceptron;
@@ -365,130 +365,130 @@ public class Classify {
 		System.out.println("");
 	}
 	
-	private static Instances createDatasets(int samplePerClass, Set<String> processIdsToAvoid, String[] tasks) throws SQLException {
-		Instances instances = new Instances("DATA", new ArrayList<Attribute>(attributes.values()), samplePerClass*2);
-		instances.setClass(attributes.get("expertise"));
-		
-		for (String task : tasks) {
-			populateInstances(instances,
-					connection.createStatement().executeQuery("select * from metrics_evolution where "
-							+ "(task = \""+ task +"\") and "
-							+ "(relative_modeling_time >= 0.3) and "
-							+ "(percent_crossing_edges is not null) and "
-							+ "(percent_orthogonal_seg is not null) and "
-							+ "(mbp is not null) and "
-							+ "(no_ending_points is not null) and "
-							+ "(align_fragments is not null) and "
-							+ "(percent_acts_aligned_frags is not null) and "
-							+ "(percent_acts_not_aligned_frags is not null) and "
-							+ "(no_explicit_gw is not null) and "
-							+ "(no_implicit_gw is not null) and "
-							+ "(no_reused_gw is not null) and "
-							+ "(expertise = \"expert\") "
-							+ "order by rand limit "+ (samplePerClass / tasks.length)));
-			populateInstances(instances,
-					connection.createStatement().executeQuery("select * from metrics_evolution where "
-							+ "(task = \""+ task +"\") and "
-							+ "(relative_modeling_time >= 0.3) and "
-							+ "(percent_crossing_edges is not null) and "
-							+ "(percent_orthogonal_seg is not null) and "
-							+ "(mbp is not null) and "
-							+ "(no_ending_points is not null) and "
-							+ "(align_fragments is not null) and "
-							+ "(percent_acts_aligned_frags is not null) and "
-							+ "(percent_acts_not_aligned_frags is not null) and "
-							+ "(no_explicit_gw is not null) and "
-							+ "(no_implicit_gw is not null) and "
-							+ "(no_reused_gw is not null) and "
-							+ "(expertise = \"novice\") "
-							+ "order by rand limit "+ (samplePerClass / tasks.length)));
-		}
-		return instances;
-	}
+//	private static Instances createDatasets(int samplePerClass, Set<String> processIdsToAvoid, String[] tasks) throws SQLException {
+//		Instances instances = new Instances("DATA", new ArrayList<Attribute>(attributes.values()), samplePerClass*2);
+//		instances.setClass(attributes.get("expertise"));
+//		
+//		for (String task : tasks) {
+//			populateInstances(instances,
+//					connection.createStatement().executeQuery("select * from metrics_evolution where "
+//							+ "(task = \""+ task +"\") and "
+//							+ "(relative_modeling_time >= 0.3) and "
+//							+ "(percent_crossing_edges is not null) and "
+//							+ "(percent_orthogonal_seg is not null) and "
+//							+ "(mbp is not null) and "
+//							+ "(no_ending_points is not null) and "
+//							+ "(align_fragments is not null) and "
+//							+ "(percent_acts_aligned_frags is not null) and "
+//							+ "(percent_acts_not_aligned_frags is not null) and "
+//							+ "(no_explicit_gw is not null) and "
+//							+ "(no_implicit_gw is not null) and "
+//							+ "(no_reused_gw is not null) and "
+//							+ "(expertise = \"expert\") "
+//							+ "order by rand limit "+ (samplePerClass / tasks.length)));
+//			populateInstances(instances,
+//					connection.createStatement().executeQuery("select * from metrics_evolution where "
+//							+ "(task = \""+ task +"\") and "
+//							+ "(relative_modeling_time >= 0.3) and "
+//							+ "(percent_crossing_edges is not null) and "
+//							+ "(percent_orthogonal_seg is not null) and "
+//							+ "(mbp is not null) and "
+//							+ "(no_ending_points is not null) and "
+//							+ "(align_fragments is not null) and "
+//							+ "(percent_acts_aligned_frags is not null) and "
+//							+ "(percent_acts_not_aligned_frags is not null) and "
+//							+ "(no_explicit_gw is not null) and "
+//							+ "(no_implicit_gw is not null) and "
+//							+ "(no_reused_gw is not null) and "
+//							+ "(expertise = \"novice\") "
+//							+ "order by rand limit "+ (samplePerClass / tasks.length)));
+//		}
+//		return instances;
+//	}
 	
-	private static Instance createInstance(ResultSet resultSet) throws SQLException {
-		Instance i = new DenseInstance(attributes.size());
-		for (String attribute : attributes.keySet()) {
-			if (types.get(attribute) == TYPE.STRING) {
-				i.setValue(attributes.get(attribute), resultSet.getString(attribute));
-			} else if (types.get(attribute) == TYPE.DOUBLE) {
-				i.setValue(attributes.get(attribute), resultSet.getDouble(attribute));
-			} else if (types.get(attribute) == TYPE.INT) {
-				i.setValue(attributes.get(attribute), resultSet.getInt(attribute));
-			}
-		}
-		return i;
-	}
+//	private static Instance createInstance(ResultSet resultSet) throws SQLException {
+//		Instance i = new DenseInstance(attributes.size());
+//		for (String attribute : attributes.keySet()) {
+//			if (types.get(attribute) == TYPE.STRING) {
+//				i.setValue(attributes.get(attribute), resultSet.getString(attribute));
+//			} else if (types.get(attribute) == TYPE.DOUBLE) {
+//				i.setValue(attributes.get(attribute), resultSet.getDouble(attribute));
+//			} else if (types.get(attribute) == TYPE.INT) {
+//				i.setValue(attributes.get(attribute), resultSet.getInt(attribute));
+//			}
+//		}
+//		return i;
+//	}
 	
-	private static void populateInstances(Instances instances, ResultSet resultSet) throws SQLException {
-		while (resultSet.next()) {
-			instances.add(createInstance(resultSet));
-		}
-	}
+//	private static void populateInstances(Instances instances, ResultSet resultSet) throws SQLException {
+//		while (resultSet.next()) {
+//			instances.add(createInstance(resultSet));
+//		}
+//	}
 	
-	private static AbstractClassifier createClassifier_SVM(Instances instances) throws Exception {
-		
-		PolyKernel kernel = new PolyKernel();
-		kernel.setExponent(1);
-		
-		SMO classifier = new SMO();
-		classifier.setDebug(false);
-		classifier.setC(1.0);
-		classifier.setFilterType(new SelectedTag(SMO.FILTER_NORMALIZE, SMO.TAGS_FILTER));
-		classifier.setToleranceParameter(0.001);
-		classifier.setEpsilon(1.0e-12);
-		classifier.setBuildCalibrationModels(false);
-		classifier.setNumFolds(-1);
-		classifier.setRandomSeed(1);
-		classifier.setKernel(kernel);
-		
-		classifier.buildClassifier(instances);
-		
-		return classifier;
-	}
+//	private static AbstractClassifier createClassifier_SVM(Instances instances) throws Exception {
+//		
+//		PolyKernel kernel = new PolyKernel();
+//		kernel.setExponent(1);
+//		
+//		SMO classifier = new SMO();
+//		classifier.setDebug(false);
+//		classifier.setC(1.0);
+//		classifier.setFilterType(new SelectedTag(SMO.FILTER_NORMALIZE, SMO.TAGS_FILTER));
+//		classifier.setToleranceParameter(0.001);
+//		classifier.setEpsilon(1.0e-12);
+//		classifier.setBuildCalibrationModels(false);
+//		classifier.setNumFolds(-1);
+//		classifier.setRandomSeed(1);
+//		classifier.setKernel(kernel);
+//		
+//		classifier.buildClassifier(instances);
+//		
+//		return classifier;
+//	}
 
-	private static AbstractClassifier createClassifier_NN(Instances instances) throws Exception {
-	
-		MultilayerPerceptron classifier = new MultilayerPerceptron();
-		classifier.setTrainingTime(500);
-		classifier.setLearningRate(0.3);
-		classifier.setMomentum(0.2);
-		classifier.setHiddenLayers("50"); // one hidden layer with 25 neurons
-		
-		classifier.buildClassifier(instances);
-		
-		return classifier;
-	}
+//	private static AbstractClassifier createClassifier_NN(Instances instances) throws Exception {
+//	
+//		MultilayerPerceptron classifier = new MultilayerPerceptron();
+//		classifier.setTrainingTime(500);
+//		classifier.setLearningRate(0.3);
+//		classifier.setMomentum(0.2);
+//		classifier.setHiddenLayers("50"); // one hidden layer with 25 neurons
+//		
+//		classifier.buildClassifier(instances);
+//		
+//		return classifier;
+//	}
 
-	private static Pair<Instances, Instances> splitTrainingAnsTestSet(Instances instances, int trainingPerc, boolean random) {
-		
-		int trainingSize = (int) Math.ceil(instances.size() / 2);
-		if (trainingPerc > 0 || trainingPerc <= 100) {
-			trainingSize = (int) (((double)trainingPerc / 100.0) * (double) instances.size());
-		}
-		
-		int testSize = instances.size() - trainingSize;
-		
-		Instances training = new Instances(instances, trainingSize);
-		Instances test = new Instances(instances, testSize);
-		
-		ArrayList<Integer> ids = new ArrayList<Integer>();
-		for (int i = 0; i < instances.size(); ++i) {
-			ids.add(i);
-		}
-		
-		if (random) {
-			java.util.Collections.shuffle(ids);
-		} 
-		
-		for (int i = 0; i < trainingSize; ++i) {
-			training.add(instances.get(ids.get(i)));
-		}
-		
-		for (int i = trainingSize; i < instances.size(); ++i) {
-			test.add(instances.get(ids.get(i)));
-		}
-		
-		return new Pair<Instances, Instances>(training, test);
-	}
+//	private static Pair<Instances, Instances> splitTrainingAnsTestSet(Instances instances, int trainingPerc, boolean random) {
+//		
+//		int trainingSize = (int) Math.ceil(instances.size() / 2);
+//		if (trainingPerc > 0 || trainingPerc <= 100) {
+//			trainingSize = (int) (((double)trainingPerc / 100.0) * (double) instances.size());
+//		}
+//		
+//		int testSize = instances.size() - trainingSize;
+//		
+//		Instances training = new Instances(instances, trainingSize);
+//		Instances test = new Instances(instances, testSize);
+//		
+//		ArrayList<Integer> ids = new ArrayList<Integer>();
+//		for (int i = 0; i < instances.size(); ++i) {
+//			ids.add(i);
+//		}
+//		
+//		if (random) {
+//			java.util.Collections.shuffle(ids);
+//		} 
+//		
+//		for (int i = 0; i < trainingSize; ++i) {
+//			training.add(instances.get(ids.get(i)));
+//		}
+//		
+//		for (int i = trainingSize; i < instances.size(); ++i) {
+//			test.add(instances.get(ids.get(i)));
+//		}
+//		
+//		return new Pair<Instances, Instances>(training, test);
+//	}
 }

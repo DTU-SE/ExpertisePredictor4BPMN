@@ -21,7 +21,10 @@ public class ModelSample {
 	
 	static {
 		// this is the list of attributes used with the corresponding type
-		attributeTypes.put("model_id", DATA_TYPE.SAMPLE_ID);
+		attributeTypes.put("model_id", DATA_TYPE.IGNORE_STRING);
+		attributeTypes.put("relative_modeling_time", DATA_TYPE.IGNORE_NUMERIC);
+		attributeTypes.put("modeling_time", DATA_TYPE.IGNORE_NUMERIC);
+		
 		attributeTypes.put("expertise", DATA_TYPE.CLASS);
 		attributeTypes.put("percent_crossing_edges", DATA_TYPE.NUMERIC);
 		attributeTypes.put("percent_orthogonal_seg", DATA_TYPE.NUMERIC);
@@ -36,13 +39,12 @@ public class ModelSample {
 		
 		// construct the list of weka attributes
 		for (String attribute : attributeTypes.keySet()) {
-			if (attributeTypes.get(attribute) != DATA_TYPE.SAMPLE_ID) {
-				if (attributeTypes.get(attribute) == DATA_TYPE.CLASS) {
-					classAttribute = new Attribute(attribute, EXPERTISE.names());
-					attributes.put(attribute, classAttribute);
-				} else {
-					attributes.put(attribute, new Attribute(attribute));
-				}
+			DATA_TYPE attributeDataType = attributeTypes.get(attribute);
+			if (attributeDataType == DATA_TYPE.CLASS) {
+				classAttribute = new Attribute(attribute, EXPERTISE.names());
+				attributes.put(attribute, classAttribute);
+			} else if (attributeDataType == DATA_TYPE.NUMERIC) {
+				attributes.put(attribute, new Attribute(attribute));
 			}
 		}
 	}
@@ -51,14 +53,14 @@ public class ModelSample {
 	
 	public ModelSample(Map<String, Object> values) throws PredictorException {
 		for(String attribute : values.keySet()) {
-			setTypedValue(attribute, values.get(attribute));
+			setTypedAttribute(attribute, values.get(attribute));
 		}
 	}
 	
 	public Instance getWekaInstance() {
 		Instances dataset = new Instances("DATA", new ArrayList<Attribute>(ModelSample.attributes.values()), 1);
 		dataset.setClass(classAttribute);
-		Instance wekaInstance = new DenseInstance(attributeTypes.size() - 1); // we do not wat to consider the SAMPLE_ID attribute
+		Instance wekaInstance = new DenseInstance(attributes.size());
 		wekaInstance.setDataset(dataset);
 		for (String attribute : attributeTypes.keySet()) {
 			try {
@@ -76,11 +78,11 @@ public class ModelSample {
 	}
 	
 	public void setValue(String attributeName, String value) throws PredictorException {
-		setTypedValue(attributeName, value);
+		setTypedAttribute(attributeName, value);
 	}
 	
 	public void setValue(String attributeName, Double value) throws PredictorException {
-		setTypedValue(attributeName, value);
+		setTypedAttribute(attributeName, value);
 	}
 	
 	public EXPERTISE getSampleClass() {
@@ -93,21 +95,21 @@ public class ModelSample {
 	}
 	
 	public String getString(String attributeName) throws WrongValueType {
-		return (String) getTypedAttribute(attributeName, DATA_TYPE.SAMPLE_ID, DATA_TYPE.CLASS);
+		return (String) getTypedAttribute(attributeName, DATA_TYPE.IGNORE_STRING, DATA_TYPE.CLASS);
 	}
 	
 	public Double getNumeric(String attributeName) throws WrongValueType {
-		return (Double) getTypedAttribute(attributeName, DATA_TYPE.NUMERIC);
+		return (Double) getTypedAttribute(attributeName, DATA_TYPE.IGNORE_NUMERIC, DATA_TYPE.NUMERIC);
 	}
 	
-	private void setTypedValue(String attributeName, Object value) throws PredictorException {
+	private void setTypedAttribute(String attributeName, Object value) throws PredictorException {
 		DATA_TYPE expectedType = attributeTypes.get(attributeName);
 		if (expectedType == null) {
 			throw new UnknownAttribute();
 		}
-		if (EnumSet.of(DATA_TYPE.SAMPLE_ID, DATA_TYPE.CLASS).contains(expectedType) && value instanceof String) {
+		if (EnumSet.of(DATA_TYPE.IGNORE_STRING, DATA_TYPE.CLASS).contains(expectedType) && value instanceof String) {
 			attributeValues.put(attributeName, (String) value);
-		} else if (expectedType == DATA_TYPE.NUMERIC && value instanceof Double) {
+		} else if (EnumSet.of(DATA_TYPE.IGNORE_NUMERIC, DATA_TYPE.NUMERIC).contains(expectedType) && value instanceof Double) {
 			attributeValues.put(attributeName, (Double) value);
 		} else {
 			throw new WrongValueType(attributeName, attributeTypes.get(attributeName), value);

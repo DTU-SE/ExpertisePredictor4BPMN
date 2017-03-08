@@ -1,7 +1,7 @@
 package moderare.expertise.model;
 
 public enum DATA_TYPE {
-	SAMPLE_ID, // the data type to identify the id of the sample (not used for classification)
+	IGNORE_STRING, IGNORE_NUMERIC, // data types fetched from the database but ignored for the classidication
 	CLASS, // the data type referring to the class
 	NUMERIC,  // double data type
 }

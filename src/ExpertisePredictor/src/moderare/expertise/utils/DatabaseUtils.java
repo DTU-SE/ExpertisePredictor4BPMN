@@ -15,7 +15,7 @@ public class DatabaseUtils {
 		HashMap<String, Object> row = new HashMap<String, Object>();
 		for (int i = 1; i <= columns; i++) {
 			int columnType = md.getColumnType(i);
-			if (columnType == Types.REAL || columnType == Types.TINYINT) {
+			if (columnType == Types.REAL || columnType == Types.TINYINT || columnType == Types.INTEGER) {
 				row.put(md.getColumnName(i), rs.getDouble(i));
 			} else {
 				row.put(md.getColumnName(i), rs.getString(i));

@@ -24,6 +24,15 @@ public enum EXPERTISE {
 		return names;
 	}
 	
+	public static EXPERTISE fromString(String expertise) {
+		for (EXPERTISE e : values()) {
+			if (e.text.equalsIgnoreCase(expertise)) {
+				return e;
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public String toString() {
 		return text;

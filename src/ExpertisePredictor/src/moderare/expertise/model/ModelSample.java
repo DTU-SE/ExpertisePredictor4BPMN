@@ -1,10 +1,9 @@
 package moderare.expertise.model;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import moderare.expertise.exceptions.PredictorException;
 import moderare.expertise.exceptions.UnknownAttribute;
@@ -12,6 +11,7 @@ import moderare.expertise.exceptions.WrongValueType;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
+import weka.core.Instances;
 
 public class ModelSample {
 
@@ -49,10 +49,6 @@ public class ModelSample {
 	
 	private Map<String, Object> attributeValues = new HashMap<String, Object>();
 	
-	public ModelSample() {
-		
-	}
-	
 	public ModelSample(Map<String, Object> values) throws PredictorException {
 		for(String attribute : values.keySet()) {
 			setTypedValue(attribute, values.get(attribute));
@@ -60,7 +56,10 @@ public class ModelSample {
 	}
 	
 	public Instance getWekaInstance() {
+		Instances dataset = new Instances("DATA", new ArrayList<Attribute>(ModelSample.attributes.values()), 1);
+		dataset.setClass(classAttribute);
 		Instance wekaInstance = new DenseInstance(attributeTypes.size() - 1); // we do not wat to consider the SAMPLE_ID attribute
+		wekaInstance.setDataset(dataset);
 		for (String attribute : attributeTypes.keySet()) {
 			try {
 				if (attributeTypes.get(attribute) == DATA_TYPE.CLASS) {
@@ -82,6 +81,15 @@ public class ModelSample {
 	
 	public void setValue(String attributeName, Double value) throws PredictorException {
 		setTypedValue(attributeName, value);
+	}
+	
+	public EXPERTISE getSampleClass() {
+		try {
+			return EXPERTISE.fromString(getString(classAttribute.name()));
+		} catch (WrongValueType e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public String getString(String attributeName) throws WrongValueType {

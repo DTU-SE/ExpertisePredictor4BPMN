@@ -37,7 +37,7 @@ public class ExpertisePredictor4BPMN {
 		DatabaseDataset dataset = new DatabaseDataset(connection);
 		for (String task : new String[]{ "mortgage-1", "pre-flight"}){
 			for (EXPERTISE expertise : EXPERTISE.values()) {
-				dataset.addFromDatabase(true, task, expertise, 0.3, 2500, "rand ASC");
+				dataset.addFromDatabase(true, task, expertise, 0.3, 100, "rand ASC");
 			}
 		}
 		Pair<Dataset, Dataset> trainTest = dataset.split(0.75);
@@ -84,13 +84,16 @@ public class ExpertisePredictor4BPMN {
 			System.out.println("\nSINGLE TASK VALIDATION");
 			System.out.println("======================\n");
 			
-			for (String model_id : new String[] {"180_modeling_process_eindhoven_2012_1.0", "22155_expert_modeling_task2_1.0"}) {
+			for (String model_id : new String[] {/*"180_modeling_process_eindhoven_2012_1.0", "22122_expert_modeling_task2_1.0"*/ "32_modeling_process_eindhoven_2012_1.0"}) {
 				ModelingSession session = new ModelingSession(connection);
 				session.loadFromDatabase(model_id);
-				System.out.println(session.getModelId());
+				System.out.println(session.getModelId() + " (" + session.getSampleClass() + ")");
 				for (int windowSize : new int[] {10, 20, 40} ) {
-					System.out.println("  window size: " + windowSize + " -> " + String.format("%.2f", classifier.classifyInstance(session, windowSize, 0.6)) + " accuracy");
+					double globalAccuracy = classifier.computeAccuracy(session, windowSize, 0.6);
+					System.out.println("  window size: " + windowSize + " -> " + String.format("%.2f", globalAccuracy) + " global accuracy");
 				}
+//				classifier.exportAccuracyChart(session, new int[] {5, 20, 40} , "charts/accuracies_" + session.getModelId() + ".png");
+				classifier.exportCorrectClassificationChart(session, new int[] {5, 20, 40} , "charts/correctness_" + session.getModelId() + ".png", 0.9);
 			}
 		}
 		

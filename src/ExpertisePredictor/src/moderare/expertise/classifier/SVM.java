@@ -1,12 +1,14 @@
 package moderare.expertise.classifier;
 
+import weka.classifiers.AbstractClassifier;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.core.SelectedTag;
 
 public class SVM extends Classifier {
 
-	public SVM() {
+	@Override
+	protected AbstractClassifier construct() {
 		PolyKernel kernel = new PolyKernel();
 		kernel.setExponent(1);
 		
@@ -21,6 +23,6 @@ public class SVM extends Classifier {
 		svm.setRandomSeed(1);
 		svm.setKernel(kernel);
 		
-		classifier = svm;
+		return svm;
 	}
 }

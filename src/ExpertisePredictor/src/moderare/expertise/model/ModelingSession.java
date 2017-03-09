@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import moderare.expertise.exceptions.PredictorException;
+import moderare.expertise.exceptions.WrongValueType;
 
 public class ModelingSession extends DatabaseDataset {
 
@@ -14,13 +15,31 @@ public class ModelingSession extends DatabaseDataset {
 		super(connection);
 	}
 	
-	public String getModelId() {
-		return model_id;
-	}
-	
 	public void loadFromDatabase(String model_id) throws SQLException, PredictorException {
 		this.model_id = model_id;
 		clear();
 		load(constructQuery(false, null, null, 0.0, "model_id = \"" + model_id + "\"", -1, "modeling_time ASC"));
+	}
+	
+	public String getModelId() {
+		return model_id;
+	}
+	
+	public EXPERTISE getSampleClass() {
+		if (!isEmpty()) {
+			return getFirst().getSampleClass();
+		}
+		return null;
+	}
+	
+	public String getTaskName() {
+		if (!isEmpty()) {
+			try {
+				return getFirst().getString("task");
+			} catch (WrongValueType e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 }

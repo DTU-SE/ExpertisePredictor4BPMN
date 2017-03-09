@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS `metrics_evolution` (
+  `model_id` tinytext NOT NULL,
+  `process_id` smallint(6) NOT NULL,
+  `experiment` enum('experiment-1', 'experiment-2', 'experiment-3') NOT NULL,
+  `task` enum('task-1', 'task-2', 'task-3') DEFAULT NULL,
+  `expertise` enum('expert','novice') DEFAULT NULL,
+  `modeling_time` int(11) unsigned DEFAULT NULL,
+  `relative_modeling_time` float unsigned DEFAULT NULL,
+  `percent_crossing_edges` float unsigned DEFAULT NULL,
+  `percent_orthogonal_seg` float unsigned DEFAULT NULL,
+  `mbp` float unsigned DEFAULT NULL,
+  `no_ending_points` tinyint(3) unsigned DEFAULT NULL,
+  `align_fragments` float unsigned DEFAULT NULL,
+  `percent_acts_aligned_frags` float unsigned DEFAULT NULL,
+  `percent_acts_not_aligned_frags` float unsigned DEFAULT NULL,
+  `no_explicit_gw` tinyint(3) unsigned DEFAULT NULL,
+  `no_implicit_gw` tinyint(3) unsigned DEFAULT NULL,
+  `no_reused_gw` tinyint(3) unsigned DEFAULT NULL,
+  `rand` float DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

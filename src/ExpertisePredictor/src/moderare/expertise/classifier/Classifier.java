@@ -12,6 +12,7 @@ import moderare.expertise.model.Dataset;
 import moderare.expertise.model.EXPERTISE;
 import moderare.expertise.model.ModelSample;
 import moderare.expertise.model.ModelingSession;
+import moderare.expertise.utils.ChartUtils;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
@@ -24,6 +25,8 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.StackedBarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.title.Title;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -143,7 +146,7 @@ public abstract class Classifier {
 			dataset.addSeries(series);
 		}
 		
-		JFreeChart chart = ChartFactory.createScatterPlot(session.getModelId() + " (" + session.getSampleClass() + ", " + session.getTaskName() + ")",
+		JFreeChart chart = ChartFactory.createScatterPlot(session.getModelId(),
 				"Relative time (% modeling session)", // x axis label
 				"Correctness ratio", // y axis label
 				dataset, // data
@@ -152,6 +155,12 @@ public abstract class Classifier {
 				true, // tooltips
 				false // urls
 				);
+		
+		@SuppressWarnings("unchecked")
+		List<Title> subTitles = chart.getSubtitles();
+		subTitles.add(new TextTitle("Expertise: " + session.getSampleClass() + "          Task name: " + session.getTaskName()));
+		chart.setSubtitles(subTitles);
+		
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 		for (int i = 0; i < windowSizes.length; i++) {
 			renderer.setSeriesLinesVisible(i, true);
@@ -164,7 +173,11 @@ public abstract class Classifier {
 		plot.getDomainAxis().setRange(0.0, 1.0);
 
 		try {
-			ChartUtilities.saveChartAsPNG(new File(fileName), chart, 800, 400);
+			if (fileName.substring(fileName.length() - 3).equalsIgnoreCase("svg")) {
+				ChartUtils.saveChartAsSVG(chart, new File(fileName), 800, 400);
+			} else {
+				ChartUtilities.saveChartAsPNG(new File(fileName), chart, 800, 400);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -204,7 +217,6 @@ public abstract class Classifier {
 								if (i == session.size() - 1) {
 									correct = !previousCorrectness;
 								}
-								System.out.println((previousTime == null)? time : time - previousTime + "\t" + correct);
 								dataset.addValue(
 									(previousTime == null)? time : time - previousTime,
 									windowSize + "-" + i,
@@ -234,7 +246,7 @@ public abstract class Classifier {
 		}
 		
 		JFreeChart chart = ChartFactory.createStackedBarChart(
-				session.getModelId() + " (" + session.getSampleClass() + ", " + session.getTaskName() + ", min support = " + minSupport + ")",
+				session.getModelId(),
 				null, // domain axis label
 				"Relative time (% modeling session)", // x axis label
 				dataset, // data
@@ -243,7 +255,10 @@ public abstract class Classifier {
 				true, // tooltips
 				false // urls
 				);
-		
+		List<Title> subTitles = new ArrayList<Title>();
+		subTitles.add(new TextTitle("Expertise: " + session.getSampleClass() + "          Task name: " + session.getTaskName() + "          Min support = " + minSupport));
+		chart.setSubtitles(subTitles);
+
 		CategoryPlot plot = (CategoryPlot) chart.getPlot();
 		plot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
 		plot.setRenderer(renderer);
@@ -252,7 +267,11 @@ public abstract class Classifier {
 		plot.getRangeAxis().setRange(0.0, 1.0);
 		
 		try {
-			ChartUtilities.saveChartAsPNG(new File(fileName), chart, 800, 400);
+			if (fileName.substring(fileName.length() - 3).equalsIgnoreCase("svg")) {
+				ChartUtils.saveChartAsSVG(chart, new File(fileName), 800, 400);
+			} else {
+				ChartUtilities.saveChartAsPNG(new File(fileName), chart, 800, 400);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

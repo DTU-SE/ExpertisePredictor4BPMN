@@ -92,8 +92,8 @@ public class ExpertisePredictor4BPMN {
 					double globalAccuracy = classifier.computeAccuracy(session, windowSize, 0.6);
 					System.out.println("  window size: " + windowSize + " -> " + String.format("%.2f", globalAccuracy) + " global accuracy");
 				}
-//				classifier.exportAccuracyChart(session, new int[] {5, 20, 40} , "charts/accuracies_" + session.getModelId() + ".png");
-				classifier.exportCorrectClassificationChart(session, new int[] {5, 20, 40} , "charts/correctness_" + session.getModelId() + ".png", 0.9);
+				classifier.exportAccuracyChart(session, new int[] {5, 20, 40} , "charts/accuracies_" + session.getModelId() + ".svg");
+				classifier.exportCorrectClassificationChart(session, new int[] {5, 20, 40} , "charts/correctness_" + session.getModelId() + ".svg", 0.9);
 			}
 		}
 		

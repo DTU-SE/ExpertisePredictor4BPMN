@@ -2,6 +2,7 @@ package moderare.expertise;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Arrays;
 
 import moderare.expertise.classifier.NeuralNetwork;
 import moderare.expertise.model.DatabaseDataset;
@@ -17,10 +18,10 @@ public class ExpertisePredictor4BPMN {
 	public static void main(String[] args) throws Exception {
 		
 		// configuration parameters
-		boolean useAlreadyTrainedClassifier = true;
-		boolean intraTaskValidation = false;
+		boolean useAlreadyTrainedClassifier = false;
+		boolean intraTaskValidation = true;
 		boolean interTaskValidation = false;
-		boolean singleTaskValidation = true;
+		boolean singleTaskValidation = false;
 		
 		
 		// ---------------------------------------------------------------------
@@ -35,11 +36,15 @@ public class ExpertisePredictor4BPMN {
 		// ---------------------------------------------------------------------
 		System.out.print("Loading train/test datasets... ");
 		DatabaseDataset dataset = new DatabaseDataset(connection);
-		for (String task : new String[]{ "mortgage-1", "pre-flight"}){
+		for (String task : new String[]{ "mortgage-1"/*, "pre-flight"*/}){
 			for (EXPERTISE expertise : EXPERTISE.values()) {
-				dataset.addFromDatabase(true, task, expertise, 0.3, 100, "rand ASC");
+				dataset.addFromDatabase(true,
+						Arrays.asList(task),
+						Arrays.asList("modeling_process_eindhoven_2012_1.0","expert_modeling_task2_1.0"),
+						Arrays.asList(expertise), 0.3, 2000, "rand ASC");
 			}
 		}
+		
 		Pair<Dataset, Dataset> trainTest = dataset.split(0.75);
 		Dataset trainingDataset = trainTest.getFirst();
 		Dataset testDataset = trainTest.getSecond();
@@ -47,7 +52,13 @@ public class ExpertisePredictor4BPMN {
 		
 		System.out.print("Loading additional datasets... ");
 		DatabaseDataset datasetDifferentTask = new DatabaseDataset(connection);
-		datasetDifferentTask.addFromDatabase(true, "mortgage-2", null, 0, 1000, "rand ASC");
+		datasetDifferentTask.addFromDatabase(
+				false,
+				Arrays.asList("mortgage-2"),
+				null,
+				null,
+				0,
+				1000, "rand ASC");
 		
 		System.out.println("OK");
 

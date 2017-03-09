@@ -2,6 +2,7 @@ package moderare.expertise.model;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 
 import moderare.expertise.exceptions.PredictorException;
 import moderare.expertise.exceptions.WrongValueType;
@@ -18,7 +19,7 @@ public class ModelingSession extends DatabaseDataset {
 	public void loadFromDatabase(String model_id) throws SQLException, PredictorException {
 		this.model_id = model_id;
 		clear();
-		load(constructQuery(false, null, null, 0.0, "model_id = \"" + model_id + "\"", -1, "modeling_time ASC"));
+		load(constructQuery(false, null, null, null, 0.0, Collections.singletonList("model_id = \"" + model_id + "\""), -1, "modeling_time ASC"));
 	}
 	
 	public String getModelId() {

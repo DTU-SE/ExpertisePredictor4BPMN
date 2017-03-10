@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import moderare.expertise.exceptions.WrongValueType;
 import moderare.expertise.model.Dataset;
@@ -34,6 +35,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instance;
+import weka.core.Instances;
 import weka.core.SerializationHelper;
 
 public abstract class Classifier {
@@ -42,6 +44,10 @@ public abstract class Classifier {
 	
 	public Classifier() {
 		classifier = construct();
+	}
+	
+	public Classifier(String file) throws Exception {
+		load(file);
 	}
 	
 	protected abstract AbstractClassifier construct();
@@ -62,15 +68,44 @@ public abstract class Classifier {
 		}
 	}
 	
+	public Evaluation crossValidation(Dataset dataset, int folds) throws Exception {
+		Random rand = new Random();
+		Instances randData = dataset.getWekaInstances();
+		randData.randomize(rand);
+		if (randData.classAttribute().isNominal()) {
+			randData.stratify(folds);
+		}
+		Evaluation eval = new Evaluation(randData);
+		for (int n = 0; n < folds; n++) {
+			System.out.print("Cross validation - fold " + (n + 1) + "/" + folds + "... ");
+			Instances train = randData.trainCV(folds, n);
+			Instances test = randData.testCV(folds, n);
+			
+			// build and evaluate classifier
+			weka.classifiers.Classifier clsCopy = AbstractClassifier.makeCopy(classifier);
+			clsCopy.buildClassifier(train);
+			eval.evaluateModel(clsCopy, test);
+			System.out.println("OK");
+		}
+		return eval;
+	}
+	
 	public Evaluation evaluate(Dataset trainingDataset, Dataset testDataset) throws Exception {
 		Evaluation eval = new Evaluation(trainingDataset.getWekaInstances());
 		eval.evaluateModel(classifier, testDataset.getWekaInstances());
 		return eval;
 	}
 	
+	public String printEvaluation(Dataset dataset, int folds) throws Exception {
+		return printEvaluation(crossValidation(dataset, folds));
+	}
+	
 	public String printEvaluation(Dataset trainingDataset, Dataset testDataset) throws Exception {
-		Evaluation eval = evaluate(trainingDataset, testDataset);
-		return eval.toSummaryString("Evaluation statistics:", false) + "\n" + eval.toMatrixString("Confusion matrix:");
+		return printEvaluation(evaluate(trainingDataset, testDataset));
+	}
+	
+	public String printEvaluation(Evaluation evaluation) throws Exception {
+		return evaluation.toSummaryString() + "\n" + evaluation.toClassDetailsString() + "\n" + evaluation.toMatrixString();
 	}
 	
 	public EXPERTISE classifyInstance(ModelSample sample) throws Exception {

@@ -13,7 +13,7 @@ public class ValidateDatasets extends ExpertisePredictor4BPMN {
 	public static void main(String[] args) throws Exception {
 		startup();
 		
-		boolean useAlreadyTrainedClassifier = false;
+		boolean useAlreadyTrainedClassifier = true;
 		boolean intraTaskValidation = true;
 		boolean interTaskValidation = false;
 		
@@ -58,14 +58,14 @@ public class ValidateDatasets extends ExpertisePredictor4BPMN {
 		if (intraTaskValidation) {
 			System.out.println("\nINTRA-TASK VALIDATION");
 			System.out.println("=====================\n");
-			System.out.println("Datasets characteristics: " + dataset.size() + " instances, " + trainingDataset.size() + " for training, " + testDataset.size() + " for test\n");
+			System.out.println("Datasets characteristics: " + dataset.size() + " instances, " + trainingDataset.size() + " for training, " + testDataset.size() + " for test");
 			System.out.println(classifier.printEvaluation(trainingDataset, testDataset));
 		}
 		
 		if (interTaskValidation) {
 			System.out.println("\nINTER-TASKS VALIDATION");
 			System.out.println("======================\n");
-			System.out.println("Second datasets characteristics: " + datasetDifferentTask.size() + " instances\n");
+			System.out.println("Second datasets characteristics: " + datasetDifferentTask.size() + " instances");
 			System.out.println(classifier.printEvaluation(trainingDataset, datasetDifferentTask));
 		}
 		

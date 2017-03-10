@@ -26,7 +26,7 @@ public abstract class ExpertisePredictor4BPMN {
 		System.out.print("Diconnecting from database... ");
 		connection.close();
 		System.out.println("OK");
-		System.out.println("\nFinished, bye!");
+		System.out.println("Finished, bye!");
 	}
 	
 	public static String getCallerClassName() {

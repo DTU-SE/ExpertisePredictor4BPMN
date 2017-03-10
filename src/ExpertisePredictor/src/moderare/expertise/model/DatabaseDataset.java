@@ -91,7 +91,7 @@ public class DatabaseDataset extends Dataset {
 			whereConditions.add("relative_modeling_time >= "+ minRelativeModelingTime);
 		}
 		
-		return constructQuery(ModelSample.attributes.keySet(), whereConditions, numberOfCases, orderBy);
+		return constructQuery(ModelSample.attributeTypes.keySet(), whereConditions, numberOfCases, orderBy);
 	}
 	
 	protected void load(String query) throws SQLException, PredictorException {

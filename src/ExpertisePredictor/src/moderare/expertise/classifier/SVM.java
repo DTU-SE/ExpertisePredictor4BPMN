@@ -7,6 +7,14 @@ import weka.core.SelectedTag;
 
 public class SVM extends Classifier {
 
+	public SVM() {
+		
+	}
+	
+	public SVM(String file) throws Exception {
+		super(file);
+	}
+	
 	@Override
 	protected AbstractClassifier construct() {
 		PolyKernel kernel = new PolyKernel();

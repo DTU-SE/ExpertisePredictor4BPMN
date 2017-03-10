@@ -5,6 +5,14 @@ import weka.classifiers.functions.MultilayerPerceptron;
 
 public class NeuralNetwork extends Classifier {
 
+	public NeuralNetwork() {
+		
+	}
+	
+	public NeuralNetwork(String file) throws Exception {
+		super(file);
+	}
+
 	@Override
 	protected AbstractClassifier construct() {
 		MultilayerPerceptron mlp = new MultilayerPerceptron();

@@ -36,6 +36,22 @@ public class DatabaseDataset extends Dataset {
 		}
 	}
 	
+	public void addFromDatabase(
+			boolean attributesNotNull,
+			Collection<String> specificTask,
+			Collection<String> specificExperiment,
+			Collection<EXPERTISE> specificExpertise,
+			Collection<String> additionalWhereConditions,
+			double minRelativeModelingTime,
+			int numberOfCases,
+			String orderBy) {
+		try {
+			load(constructQuery(attributesNotNull, specificTask, specificExperiment, specificExpertise, minRelativeModelingTime, additionalWhereConditions, numberOfCases, orderBy));
+		} catch (SQLException | PredictorException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	protected String constructQuery(Collection<String> attributes, Collection<String> whereConditions, int numberOfCases, String orderBy) {
 		String query = "SELECT ";
 		query += StringUtils.join(attributes, ", ");

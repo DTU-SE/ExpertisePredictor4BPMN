@@ -14,7 +14,7 @@ public class CrossValidate extends ExpertisePredictor4BPMN {
 		
 		System.out.print("Loading dataset... ");
 		DatabaseDataset dataset = new DatabaseDataset(connection);
-		for (String task : new String[]{ "mortgage-1"/*, "mortgage-2"/*, "pre-flight"*/}){
+		for (String task : new String[]{ "mortgage-1", /*"mortgage-2", "pre-flight"*/}){
 			for (EXPERTISE expertise : EXPERTISE.values()) {
 				dataset.addFromDatabase(true,
 						Arrays.asList(task),
@@ -25,7 +25,7 @@ public class CrossValidate extends ExpertisePredictor4BPMN {
 		System.out.println("OK");
 		
 		NeuralNetwork nn = new NeuralNetwork();
-		Evaluation crossValidation = nn.crossValidation(dataset, 10);
+		Evaluation crossValidation = nn.crossValidation(dataset, 3, true);
 		
 		System.out.println(nn.printEvaluation(crossValidation));
 		

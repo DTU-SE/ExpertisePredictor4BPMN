@@ -60,17 +60,17 @@ public abstract class Classifier {
 		classifier = (AbstractClassifier) SerializationHelper.read(file);
 	}
 	
-	public void train(Dataset trainingDataset) {
+	public void train(Dataset trainingDataset, boolean doSmote) {
 		try {
-			classifier.buildClassifier(trainingDataset.getWekaInstances());
+			classifier.buildClassifier(trainingDataset.getWekaInstances(doSmote));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public Evaluation crossValidation(Dataset dataset, int folds) throws Exception {
+	public Evaluation crossValidation(Dataset dataset, int folds, boolean doSmote) throws Exception {
 		Random rand = new Random();
-		Instances randData = dataset.getWekaInstances();
+		Instances randData = dataset.getWekaInstances(doSmote);
 		randData.randomize(rand);
 		if (randData.classAttribute().isNominal()) {
 			randData.stratify(folds);
@@ -96,8 +96,8 @@ public abstract class Classifier {
 		return eval;
 	}
 	
-	public String printEvaluation(Dataset dataset, int folds) throws Exception {
-		return printEvaluation(crossValidation(dataset, folds));
+	public String printEvaluation(Dataset dataset, int folds, boolean doSmote) throws Exception {
+		return printEvaluation(crossValidation(dataset, folds, doSmote));
 	}
 	
 	public String printEvaluation(Dataset trainingDataset, Dataset testDataset) throws Exception {
@@ -114,25 +114,31 @@ public abstract class Classifier {
 		return EXPERTISE.fromString(EXPERTISE.names().get(classification));
 	}
 	
-	public List<EXPERTISE> classifyInstance(Dataset session) {
+	public List<EXPERTISE> classifyInstance(Dataset session, double minRelativeTime) throws WrongValueType {
 		List<EXPERTISE> classifications = new ArrayList<EXPERTISE>();
 		for(ModelSample sample : session) {
-			EXPERTISE expertise = null;
-			try {
-				expertise = classifyInstance(sample);
-			} catch (Exception e) {
-				e.printStackTrace();
+			if (minRelativeTime < 0 || sample.getNumeric("relative_modeling_time") >= minRelativeTime) {
+				EXPERTISE expertise = null;
+				try {
+					expertise = classifyInstance(sample);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				classifications.add(expertise);
 			}
-			classifications.add(expertise);
 		}
 		return classifications;
 	}
 	
-	public double computeAccuracy(ModelingSession session, int windowSize, double minSupport) {
-		List<EXPERTISE> classifications = classifyInstance(session);
+	public List<EXPERTISE> classifyInstance(Dataset session, int windowSize, double minSupport) {
+		return null;
+	}
+	
+	public double computeAccuracy(ModelingSession session, int windowSize, double minSupport, double minRelativeTime) throws WrongValueType {
+		List<EXPERTISE> classifications = classifyInstance(session, minRelativeTime);
 		double totalClassfication = 0.0;
 		double correctClassification = 0.0;
-		for (int i = 0; i < session.size(); i++) {
+		for (int i = 0; i < classifications.size(); i++) {
 			ModelSample sample = session.get(i);
 			int correctInWindow = 0;
 			if (i > windowSize) {
@@ -150,8 +156,32 @@ public abstract class Classifier {
 		return correctClassification / totalClassfication;
 	}
 	
-	public void exportAccuracyChart(ModelingSession session, int[] windowSizes, String fileName) {
-		List<EXPERTISE> classifications = classifyInstance(session);
+//	public String computeSessionAccuracy(ModelingSession session, int windowSize, double minSupport) {
+//		List<EXPERTISE> classifications = classifyInstance(session);
+//		StringBuffer output = new StringBuffer();
+//		for (int i = windowSize; i < session.size(); i++) {
+////			ModelSample sample = session.get(i);
+//			double classifiedAsExpert = 0;
+//			double classifiedAsNovice = 0;
+//			for (int j = i; j > i - windowSize; j--) {
+//				if (classifications.get(j) == EXPERTISE.NOVICE) {
+//					classifiedAsNovice++;
+//				} else {
+//					classifiedAsExpert++;
+//				}
+//			}
+//			classifiedAsExpert = classifiedAsExpert / (double) windowSize;
+//			classifiedAsNovice = classifiedAsNovice / (double) windowSize;
+//			if (classifiedAsExpert >= minSupport || classifiedAsNovice >= minSupport) {
+//				EXPERTISE predicted = (classifiedAsExpert > classifiedAsNovice) ? EXPERTISE.EXPERT : EXPERTISE.NOVICE;
+//				output.append(predicted.name().substring(0, 1) + " ");
+//			}
+//		}
+//		return output.toString();
+//	}
+	
+	public void exportAccuracyChart(ModelingSession session, int[] windowSizes, String fileName) throws WrongValueType {
+		List<EXPERTISE> classifications = classifyInstance(session, -1);
 		EXPERTISE expectedExpertise = null;
 		
 		XYSeriesCollection dataset = new XYSeriesCollection();
@@ -218,8 +248,8 @@ public abstract class Classifier {
 		}
 	}
 	
-	public void exportCorrectClassificationChart(ModelingSession session, int[] windowSizes, String fileName, double minSupport) {
-		List<EXPERTISE> classifications = classifyInstance(session);
+	public void exportCorrectClassificationChart(ModelingSession session, int[] windowSizes, String fileName, double minSupport) throws WrongValueType {
+		List<EXPERTISE> classifications = classifyInstance(session, -1);
 		EXPERTISE expectedExpertise = null;
 		
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();

@@ -20,7 +20,7 @@ public class ValidateSingleSample extends ExpertisePredictor4BPMN {
 			session.loadFromDatabase(model_id);
 			System.out.println(session.getModelId() + " (" + session.getSampleClass() + ")");
 			for (int windowSize : new int[] {10, 20, 40} ) {
-				double globalAccuracy = classifier.computeAccuracy(session, windowSize, 0.6);
+				double globalAccuracy = classifier.computeAccuracy(session, windowSize, 0.6, 0);
 				System.out.println("  window size: " + windowSize + " -> " + String.format("%.2f", globalAccuracy) + " global accuracy");
 			}
 			classifier.exportAccuracyChart(session, new int[] {5, 20, 40} , "charts/accuracies_" + session.getModelId() + ".png");

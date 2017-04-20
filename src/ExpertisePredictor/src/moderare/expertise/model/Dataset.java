@@ -8,6 +8,8 @@ import java.util.List;
 import moderare.expertise.utils.Pair;
 import weka.core.Attribute;
 import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.supervised.instance.SMOTE;
 
 public class Dataset extends LinkedList<ModelSample> {
 
@@ -36,13 +38,24 @@ public class Dataset extends LinkedList<ModelSample> {
 		return new Pair<Dataset, Dataset>(first, second);
 	}
 	
-	public Instances getWekaInstances() {
+	public Instances getWekaInstances() throws Exception {
+		return getWekaInstances(false);
+	}
+	
+	public Instances getWekaInstances(boolean doSmote) throws Exception {
 		Instances i = new Instances("DATA", new ArrayList<Attribute>(ModelSample.attributes.values()), size());
 		i.setClass(ModelSample.classAttribute);
 		
 		for(ModelSample s : this) {
 			i.add(s.getWekaInstance());
 		}
-		return i;
+		
+		if (doSmote) {
+			SMOTE filter = new SMOTE();
+			filter.setInputFormat(i);
+			return Filter.useFilter(i, filter);
+		} else {
+			return i;
+		}
 	}
 }

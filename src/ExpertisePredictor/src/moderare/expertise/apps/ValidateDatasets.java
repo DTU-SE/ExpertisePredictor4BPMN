@@ -19,7 +19,7 @@ public class ValidateDatasets extends ExpertisePredictor4BPMN {
 		
 		System.out.print("Loading train/test datasets... ");
 		DatabaseDataset dataset = new DatabaseDataset(connection);
-		for (String task : new String[]{ "mortgage-1"/*, "mortgage-2"/*, "pre-flight"*/}){
+		for (String task : new String[]{ "mortgage-1" /*, "mortgage-2", "pre-flight"*/}){
 			for (EXPERTISE expertise : EXPERTISE.values()) {
 				dataset.addFromDatabase(true,
 						Arrays.asList(task),
@@ -36,9 +36,9 @@ public class ValidateDatasets extends ExpertisePredictor4BPMN {
 		DatabaseDataset datasetDifferentTask = new DatabaseDataset(connection);
 		datasetDifferentTask.addFromDatabase(
 				false,
-				Arrays.asList("mortgage-2"),
+				Arrays.asList("pre-flight"),
 				null,
-				null,
+				Arrays.asList(EXPERTISE.EXPERT),
 				0,
 				1000, "rand ASC");
 		
@@ -50,7 +50,7 @@ public class ValidateDatasets extends ExpertisePredictor4BPMN {
 		if (useAlreadyTrainedClassifier) {
 			classifier.load(modelFilename);
 		} else {
-			classifier.train(trainingDataset);
+			classifier.train(trainingDataset, false);
 			classifier.save(modelFilename);
 		}
 		System.out.println("OK");

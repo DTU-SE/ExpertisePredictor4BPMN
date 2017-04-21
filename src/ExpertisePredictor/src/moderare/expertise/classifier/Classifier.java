@@ -134,6 +134,31 @@ public abstract class Classifier {
 		return null;
 	}
 	
+	public double computeLocalAccuracy(ModelingSession session, int windowSize, double minSupport, double startRelativeTime, double endRelativeTime) throws WrongValueType {
+		List<EXPERTISE> classifications = classifyInstance(session, 0);
+		double totalClassfication = 0.0;
+		double correctClassification = 0.0;
+		for (int i = 0; i < classifications.size(); i++) {
+			ModelSample sample = session.get(i);
+			double relativeTime = sample.getNumeric("relative_modeling_time");
+			int correctInWindow = 0;
+			if (i > windowSize) {
+				for (int j = i; j > i - windowSize; j--) {
+					if (classifications.get(j) == sample.getSampleClass()) {
+						correctInWindow++;
+					}
+				}
+				if (relativeTime > startRelativeTime && relativeTime <= endRelativeTime) {
+					if (((double) correctInWindow / (double) windowSize) >= minSupport) {
+						correctClassification++;
+					}
+					totalClassfication++;
+				}
+			}
+		}
+		return correctClassification / totalClassfication;
+	}
+	
 	public double computeAccuracy(ModelingSession session, int windowSize, double minSupport, double minRelativeTime) throws WrongValueType {
 		List<EXPERTISE> classifications = classifyInstance(session, minRelativeTime);
 		double totalClassfication = 0.0;

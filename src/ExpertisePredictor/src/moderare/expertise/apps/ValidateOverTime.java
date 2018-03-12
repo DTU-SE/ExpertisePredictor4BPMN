@@ -2,22 +2,26 @@ package moderare.expertise.apps;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import moderare.expertise.classifier.NeuralNetwork;
 import moderare.expertise.model.DatabaseDataset;
-import moderare.expertise.model.Dataset;
 import moderare.expertise.model.EXPERTISE;
 import moderare.expertise.model.ModelSample;
 import moderare.expertise.model.ModelingSession;
-import moderare.expertise.utils.DatabaseUtils;
-import moderare.expertise.utils.Pair;
 
+/**
+ * Evaluate prediction accuracy along modeling sessions. Derive a smoothened
+ * predictor and write percentage of smoothened prediction over time in a CSV file.
+ * 
+ * @author dfahland
+ *
+ */
 public class ValidateOverTime extends ExpertisePredictor4BPMN {
 	
 	private static int getBin(double relative_time, int bins) {
@@ -46,7 +50,7 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 		return classifier;
 	}
 	
-	private static StringBuffer prepareCSV_expertise_over_time (double from, double to, double step_size) {
+	private static StringBuffer prepareCSV_expertise_over_time (double from, double to, double step_size, double stable_threshold) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("model_id");
 		sb.append(",taskname");
@@ -59,7 +63,8 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 			time_rel += step_size;
 		}
 		sb.append(","+to);
-		sb.append(",stable from");
+		sb.append(",first seen "+stable_threshold+" at");
+		sb.append(",stable at "+stable_threshold+" from");
 		sb.append("\n");
 		return sb;
 	}
@@ -68,9 +73,14 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 		startup();
 		
 		boolean useAlreadyTrainedClassifier = true;
+		boolean smoothClassificationOverTime = true;
+		int smoothWindowSize = 20;
+		double stableClassificationThreshold = (!smoothClassificationOverTime) ? 1.0 : 0.6;
 		
 		String train_tasks[] = new String[] { "mortgage-1" }; 
-		String validate_tasks[] = new String[] { "pre-flight" };
+		String validate_tasks[] = new String[] { "mortgage-1" };
+//		String train_tasks[] = new String[] { "pre-flight" }; 
+//		String validate_tasks[] = new String[] { "pre-flight" };
 		
 		String train_taskString = "";
 		for (String task : train_tasks) train_taskString += task+"_";
@@ -78,6 +88,8 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 		
 		String validate_taskString = "";
 		for (String task : validate_tasks) validate_taskString += task+"_";
+		
+		String validate_smooth_string = (smoothClassificationOverTime) ? "smooth"+smoothWindowSize+"_"+stableClassificationThreshold+"_" : "plain_";
 		
 		NeuralNetwork classifier;
 		String modelFilename = "trained-models/"+train_taskString+train_size+"_nn.model";
@@ -104,7 +116,7 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 		int total_time_steps = 20; // number of time steps from 0 to 1
 		double time_from = 0.3;
 		double time_to = 1.0;
-		StringBuffer csv_exp_over_time = prepareCSV_expertise_over_time(time_from, time_to, 1/(double)total_time_steps);
+		StringBuffer csv_exp_over_time = prepareCSV_expertise_over_time(time_from, time_to, 1/(double)total_time_steps, stableClassificationThreshold);
 
 		// plot each modeling session over time wrt. classifiers
 		for (String model_id : model_ids) {
@@ -115,9 +127,21 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 			double expert_count[] = new double[total_time_steps+1];
 			double total_count[] = new double[total_time_steps+1];
 			
+			LinkedList<Double> expertCountHistory = new LinkedList<Double>();
+			
 			for (ModelSample m : session) {
 				EXPERTISE e = classifier.classifyInstance(m);
-				int e_count = (e == EXPERTISE.EXPERT) ? 1 : 0;
+				double e_count = (e == EXPERTISE.EXPERT) ? 1 : 0;
+				
+				if (smoothClassificationOverTime) {
+					// smoothen the count of expert classifications over the last X model instances
+					expertCountHistory.addLast(e_count);
+					if (expertCountHistory.size() > smoothWindowSize) expertCountHistory.removeFirst();
+					double smooth_expert_count = 0.0;
+					for (double e_hist : expertCountHistory) smooth_expert_count += e_hist;
+					e_count = smooth_expert_count / expertCountHistory.size();
+				}
+				
 				Double time = m.getNumeric("relative_modeling_time");
 				expert_count[getBin(time, total_time_steps)] += e_count;
 				total_count[getBin(time, total_time_steps)] += 1;
@@ -140,24 +164,36 @@ public class ValidateOverTime extends ExpertisePredictor4BPMN {
 			csv_exp_over_time.append(model_id);
 			csv_exp_over_time.append(","+session.getTaskName());
 			csv_exp_over_time.append(","+session.getSampleClass());
-			double one_since = -1;
+			double VAL_NON_CLASSIFIED = 1.5;
+			double at_threshold_since = VAL_NON_CLASSIFIED;
+			double first_treshold_at = VAL_NON_CLASSIFIED;
 			for (int i=0; i<expert_count.length; i++) {
-				if (i/(double)total_time_steps >= time_from && i/(double)total_time_steps <= time_to)
+				
+				double time = i/(double)total_time_steps;
+				
+				if (time >= time_from && time <= time_to) {
 					csv_exp_over_time.append(","+expert_count[i]);
 				
-				if (expert_count[i] == 1 && one_since == -1) {
-					one_since = i/(double)total_time_steps;
-				} else if (one_since != -1 && expert_count[i] != 1) {
-					one_since = -1;
+					if (expert_count[i] >= stableClassificationThreshold && at_threshold_since == VAL_NON_CLASSIFIED) {
+						at_threshold_since = time;
+					} else if (at_threshold_since != VAL_NON_CLASSIFIED && expert_count[i] < stableClassificationThreshold) {
+						at_threshold_since = VAL_NON_CLASSIFIED;
+					}
+					
+					if (expert_count[i] >= stableClassificationThreshold && first_treshold_at == VAL_NON_CLASSIFIED)
+					{
+						first_treshold_at = time;
+					}
 				}
 			}
-			csv_exp_over_time.append(","+one_since);
+			csv_exp_over_time.append(","+first_treshold_at);
+			csv_exp_over_time.append(","+at_threshold_since);
 			csv_exp_over_time.append("\n");
 		}
 		
 		BufferedWriter writer = null;
 		try {
-			writer = new BufferedWriter(new FileWriter("charts/T"+train_taskString+"V"+validate_taskString+"over_time.csv"));
+			writer = new BufferedWriter(new FileWriter("charts/T"+train_taskString+"V"+validate_taskString+validate_smooth_string+"over_time.csv"));
 			writer.append(csv_exp_over_time);
 		} finally {
 			writer.close();

@@ -18,7 +18,7 @@ public abstract class ExpertisePredictor4BPMN {
 		System.out.println("==================\n");
 		System.out.print("Connecting to database... ");
 		DriverManager.registerDriver(new Driver());
-		connection = DriverManager.getConnection("jdbc:mysql://localhost/visual-data", "test", "test");
+		connection = DriverManager.getConnection("jdbc:mysql://localhost/visual-data?useSSL=false", "test", "test");
 		System.out.println("OK");
 	}
 	

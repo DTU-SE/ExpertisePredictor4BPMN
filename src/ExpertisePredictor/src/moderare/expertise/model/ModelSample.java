@@ -25,8 +25,8 @@ public class ModelSample {
 		attributeTypes.put("relative_modeling_time", DATA_TYPE.IGNORE_NUMERIC);
 		attributeTypes.put("modeling_time", DATA_TYPE.IGNORE_NUMERIC);
 		attributeTypes.put("task", DATA_TYPE.IGNORE_STRING);
-		
 		attributeTypes.put("expertise", DATA_TYPE.CLASS);
+		
 		attributeTypes.put("percent_crossing_edges", DATA_TYPE.NUMERIC);
 		attributeTypes.put("percent_orthogonal_seg", DATA_TYPE.NUMERIC);
 		attributeTypes.put("mbp", DATA_TYPE.NUMERIC);

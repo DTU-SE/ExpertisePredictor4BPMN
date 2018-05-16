@@ -6,10 +6,8 @@ import weka.classifiers.functions.supportVector.PolyKernel;
 
 public class SVM_Poly extends Classifier {
 
-	private int degree = 1;
-	
-	public SVM_Poly(int degree) {
-		this.degree = degree;
+	public SVM_Poly() {
+
 	}
 	
 	public SVM_Poly(String file) throws Exception {
@@ -19,7 +17,7 @@ public class SVM_Poly extends Classifier {
 	@Override
 	protected AbstractClassifier construct() {
 		PolyKernel kernel = new PolyKernel();
-		kernel.setExponent(degree);
+		kernel.setExponent(3);
 		
 		SMO svm = new SMO();
 		svm.setDebug(false);

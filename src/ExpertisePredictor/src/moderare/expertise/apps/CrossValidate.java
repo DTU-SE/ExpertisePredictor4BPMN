@@ -49,8 +49,7 @@ public class CrossValidate extends ExpertisePredictor4BPMN {
 			
 			for (Classifier classifier : new Classifier[] {
 					new NeuralNetwork(),
-					new SVM_Poly(1),
-					new SVM_Poly(3),
+					new SVM_Poly(),
 					new SVM_RBF(),
 					new DecisionTree(),
 					new RandomForest(),

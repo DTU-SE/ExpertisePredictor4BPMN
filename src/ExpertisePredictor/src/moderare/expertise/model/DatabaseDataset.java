@@ -52,7 +52,7 @@ public class DatabaseDataset extends Dataset {
 		}
 	}
 	
-	protected String constructQuery(Collection<String> attributes, Collection<String> whereConditions, int numberOfCases, String orderBy) {
+	public static String constructQuery(Collection<String> attributes, Collection<String> whereConditions, int numberOfCases, String orderBy) {
 		String query = "SELECT ";
 		query += StringUtils.join(attributes, ", ");
 		query += " FROM metrics_evolution WHERE 1=1";

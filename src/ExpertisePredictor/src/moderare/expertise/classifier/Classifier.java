@@ -91,8 +91,10 @@ public abstract class Classifier {
 	}
 	
 	public Evaluation evaluate(Dataset trainingDataset, Dataset testDataset) throws Exception {
+		weka.classifiers.Classifier clsCopy = AbstractClassifier.makeCopy(classifier);
+		clsCopy.buildClassifier(trainingDataset.getWekaInstances());
 		Evaluation eval = new Evaluation(trainingDataset.getWekaInstances());
-		eval.evaluateModel(classifier, testDataset.getWekaInstances());
+		eval.evaluateModel(clsCopy, testDataset.getWekaInstances());
 		return eval;
 	}
 	
@@ -104,7 +106,7 @@ public abstract class Classifier {
 		return printEvaluation(evaluate(trainingDataset, testDataset));
 	}
 	
-	public String printEvaluation(Evaluation evaluation) throws Exception {
+	public static String printEvaluation(Evaluation evaluation) throws Exception {
 		return evaluation.toSummaryString() + "\n" + evaluation.toClassDetailsString() + "\n" + evaluation.toMatrixString();
 	}
 	
